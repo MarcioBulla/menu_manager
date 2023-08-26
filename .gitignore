@@ -80,6 +80,7 @@ test_multi_heap_host
 
 # Neo-Vim files
 *.clangd
+sdkconfig
 
 # Clion IDE CMake build & config
 .idea/
