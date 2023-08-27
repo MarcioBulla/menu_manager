@@ -26,26 +26,30 @@ void menu_init(void *args) {
   path.current_menu = &params->root;
   steck_path[depth] = path;
 
+  ESP_LOGI(TAG, "Root Title: %s", path.current_menu->label);
+
   while (true) {
     params->display(&path);
+    ESP_LOGI(TAG, "Updated display");
     input_command = params->input();
-
-    ESP_LOGI(TAG, "Received input: %d", input_command);
 
     switch (input_command) {
 
     case NAVIGATE_UP:
+      ESP_LOGI(TAG, "Command UP");
       path.current_index++;
       path.current_index %= path.current_menu->num_options;
       break;
 
     case NAVIGATE_DOWN:
+      ESP_LOGI(TAG, "Command DOWN");
       path.current_index =
           (path.current_menu->num_options + path.current_index - 1) %
           path.current_menu->num_options;
       break;
 
     case NAVIGATE_SELECT:
+      ESP_LOGI(TAG, "Command SELECT");
       if (path.current_menu->submenus[path.current_index].function) {
 
         xTaskCreatePinnedToCore(
@@ -62,6 +66,7 @@ void menu_init(void *args) {
       break;
 
     case NAVIGATE_BACK:
+      ESP_LOGI(TAG, "Command BACK");
       depth--;
       path = steck_path[depth];
       break;
