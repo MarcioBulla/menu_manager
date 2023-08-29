@@ -25,6 +25,8 @@ typedef enum {
   /**< Action SELECT (depth++). */
   NAVIGATE_BACK,
   /**< Action BACH (depth--). */
+  NAVIGATE_NOTHIN,
+  /**< Nothing. */
 } Navigate_t;
 
 /**
@@ -62,7 +64,7 @@ typedef struct {
   /**< Menu_node_t: origin of Menu System. */
   Navigate_t (*input)(void);
   /**< Function that have to return Navigate_t to navigate. */
-  esp_err_t (*display)(menu_path_t *current_path);
+  void (*display)(menu_path_t *current_path);
   /**< Function that receive menu_path_t and index for display current
    * selection. */
 } menu_config_t;
