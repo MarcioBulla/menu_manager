@@ -32,6 +32,9 @@ static rotary_encoder_t re;
 bool blacklight = true;
 static i2c_dev_t pcf8574;
 
+uint8_t first = 0, end = 0;
+const char *old_title;
+
 static const uint8_t char_data[] = { // Define new chars
                                      // Right Arrow
     0x00, 0x04, 0x06, 0x1F, 0x1F, 0x06, 0x04, 0x00};
@@ -132,7 +135,7 @@ Navigate_t map(void) {
   }
 }
 
-void display(menu_path_t *current_path) {
+void display_loop(menu_path_t *current_path) {
   const char *title = current_path->current_menu->label;
 
   uint8_t select = current_path->current_index;
@@ -156,6 +159,35 @@ void display(menu_path_t *current_path) {
   hd44780_puts(&lcd, select_label);
   hd44780_gotoxy(&lcd, 0, 3);
   hd44780_puts(&lcd, next_label);
+}
+
+void display(menu_path_t *current_path) {
+  uint8_t select = current_path->current_index;
+  uint8_t count = 1;
+  const char *title = current_path->current_menu->label;
+
+  hd44780_clear(&lcd);
+  hd44780_gotoxy(&lcd, (CONFIG_HORIZONTAL_SIZE - strlen(title)) / 2, 0);
+  hd44780_puts(&lcd, title);
+  if (select < first || select == 0) {
+    first = select;
+    end = first + CONFIG_VERTICAL_SIZE - 1;
+    old_title = title;
+  } else if (select + 1 > end || old_title != title) {
+    end = select + 1;
+    first = end - CONFIG_VERTICAL_SIZE + 1;
+    old_title = title;
+  }
+
+  for (uint8_t _ = first; _ < end; _++) {
+    hd44780_gotoxy(&lcd, 0, count);
+    count++;
+    if (_ == select) {
+      hd44780_putc(&lcd, 0);
+      hd44780_putc(&lcd, ' ');
+    }
+    hd44780_puts(&lcd, current_path->current_menu->submenus[_].label);
+  }
 }
 
 menu_node_t submenu[3] = {
