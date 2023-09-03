@@ -1,5 +1,4 @@
-// TODO: Organizar codigo definir tud no inicio depois main_app e depois todas
-// as funçõe
+// TODO: ADD comments
 
 #include "esp_err.h"
 #include "freertos/portmacro.h"
@@ -27,18 +26,21 @@ static const char *TAG = "main";
 QueueHandle_t qinput;
 static rotary_encoder_t re;
 
-bool blacklight = true;
 static i2c_dev_t pcf8574;
-
-uint8_t first = 0, end = 0;
-const char *old_title;
-void *displays[2];
+hd44780_t lcd;
 
 menu_config_t config;
+
+bool blacklight = true;
+uint8_t first = 0, end = 0;
+const char *old_title;
+void *displays_opt[2];
 
 static const uint8_t char_data[] = { // Define new chars
                                      // Right Arrow
     0x00, 0x04, 0x06, 0x1F, 0x1F, 0x06, 0x04, 0x00};
+
+esp_err_t start_lcd(void);
 
 /**
  * Callback to comunication to LCD from pcf8574
@@ -47,24 +49,72 @@ static const uint8_t char_data[] = { // Define new chars
  * @param command that dispay xQueueReceive
  * @return Action that esp32 will happend
  */
+static esp_err_t write_lcd_data(const hd44780_t *lcd, uint8_t data);
+
+esp_err_t start_encoder(void);
+
+Navigate_t map(void);
+
+void display(menu_path_t *current_path);
+
+void display_loop(menu_path_t *current_path);
+
+void switch_menu(void *args);
+
+void dumb(void *args);
+
+void switch_blacklight(void *args);
+
+menu_node_t submenu[3] = {
+    {.label = "funcA", .function = &dumb},
+    {.label = "funcB", .function = &dumb},
+    {.label = "funcC", .function = &dumb},
+};
+
+menu_node_t root = {
+    .label = "root",
+    .num_options = 5,
+    .submenus = (menu_node_t[5]){
+        {.label = "submenu1", .submenus = submenu, .num_options = 3},
+        {.label = "submenu2", .submenus = submenu, .num_options = 3},
+        {.label = "submenu3", .submenus = submenu, .num_options = 3},
+        {.label = "Type Menu", .function = &switch_menu},
+        {.label = "blacklight", .function = &switch_blacklight},
+    }};
+
+void app_main(void) {
+  qinput = xQueueCreate(5, sizeof(rotary_encoder_event_t));
+
+  config.root = root;
+  config.input = &map;
+  config.display = &display;
+
+  lcd.write_cb = write_lcd_data;
+  lcd.font = HD44780_FONT_5X8;
+  lcd.lines = CONFIG_VERTICAL_SIZE;
+  lcd.pins.rs = 0;
+  lcd.pins.e = 2;
+  lcd.pins.d4 = 4;
+  lcd.pins.d5 = 5;
+  lcd.pins.d6 = 6;
+  lcd.pins.d7 = 7;
+  lcd.pins.bl = 3;
+
+  displays_opt[0] = &display;
+  displays_opt[1] = &display_loop;
+
+  ESP_ERROR_CHECK(start_lcd());
+  ESP_ERROR_CHECK(start_encoder());
+
+  xTaskCreatePinnedToCore(&menu_init, "menu_init", 2048, &config, 1, NULL, 0);
+  vTaskDelete(NULL);
+}
+
 static esp_err_t write_lcd_data(const hd44780_t *lcd, uint8_t data) {
   return pcf8574_port_write(&pcf8574, data);
 }
 
-hd44780_t lcd = {.write_cb = write_lcd_data,
-                 .font = HD44780_FONT_5X8,
-                 .lines = CONFIG_VERTICAL_SIZE,
-                 .pins = {
-                     .rs = 0,
-                     .e = 2,
-                     .d4 = 4,
-                     .d5 = 5,
-                     .d6 = 6,
-                     .d7 = 7,
-                     .bl = 3,
-                 }};
-
-void input_encoder(void *args) {
+esp_err_t start_encoder(void) {
 
   ESP_ERROR_CHECK(rotary_encoder_init(qinput));
 
@@ -73,7 +123,21 @@ void input_encoder(void *args) {
   re.pin_btn = CONFIG_ENCODER_SW;
 
   ESP_ERROR_CHECK(rotary_encoder_add(&re));
-  vTaskDelete(NULL);
+  return ESP_OK;
+}
+
+esp_err_t start_lcd(void) {
+
+  ESP_ERROR_CHECK(i2cdev_init());
+  ESP_ERROR_CHECK(pcf8574_init_desc(&pcf8574, CONFIG_DISPLAY_ADDR, 0,
+                                    CONFIG_I2C_SDA, CONFIG_I2C_SCL));
+
+  hd44780_switch_backlight(&lcd, blacklight);
+  ESP_ERROR_CHECK(hd44780_init(&lcd));
+  hd44780_upload_character(&lcd, 0, char_data);
+  ESP_LOGI(TAG, "LCD ON!");
+
+  return ESP_OK;
 }
 
 void dumb(void *args) {
@@ -195,46 +259,6 @@ uint8_t option_type_menu = 0;
 void switch_menu(void *args) {
   SET_QUICK_FUNCTION;
   option_type_menu ^= 1;
-  config.display = displays[option_type_menu];
+  config.display = displays_opt[option_type_menu];
   END_MENU_FUNCTION;
-}
-
-menu_node_t submenu[3] = {
-    {.label = "funcA", .function = &dumb},
-    {.label = "funcB", .function = &dumb},
-    {.label = "funcC", .function = &dumb},
-};
-
-menu_node_t root = {
-    .label = "root",
-    .num_options = 5,
-    .submenus = (menu_node_t[5]){
-        {.label = "submenu1", .submenus = submenu, .num_options = 3},
-        {.label = "submenu2", .submenus = submenu, .num_options = 3},
-        {.label = "submenu3", .submenus = submenu, .num_options = 3},
-        {.label = "blacklight", .function = &switch_blacklight},
-        {.label = "Type Menu", .function = &switch_menu}}};
-
-void app_main(void) {
-  qinput = xQueueCreate(5, sizeof(rotary_encoder_event_t));
-
-  ESP_ERROR_CHECK(i2cdev_init());
-  ESP_ERROR_CHECK(pcf8574_init_desc(&pcf8574, CONFIG_DISPLAY_ADDR, 0,
-                                    CONFIG_I2C_SDA, CONFIG_I2C_SCL));
-
-  hd44780_switch_backlight(&lcd, blacklight);
-  ESP_ERROR_CHECK(hd44780_init(&lcd));
-  hd44780_upload_character(&lcd, 0, char_data);
-  ESP_LOGI(TAG, "LCD ON!");
-
-  config.root = root;
-  config.input = &map;
-  config.display = &display;
-
-  displays[0] = &display;
-  displays[1] = &display_loop;
-
-  xTaskCreatePinnedToCore(&input_encoder, "encoder", 2048, NULL, 5, NULL, 0);
-  xTaskCreatePinnedToCore(&menu_init, "menu_init", 2048, &config, 1, NULL, 0);
-  vTaskDelete(NULL);
 }
