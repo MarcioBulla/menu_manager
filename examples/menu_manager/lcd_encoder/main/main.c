@@ -1,7 +1,5 @@
-// TODO: Criar um Kconfig para definir o tamanho do display;
-// TODO: Colocar no Kconfig os pinos para o encoder e display;
-// TODO: Criar maneira que a sela se movimenta e não as opções;
-// TODO: Colocar no se quer a ista em LOOP ou se quer que a seta mude;
+// TODO: Organizar codigo definir tud no inicio depois main_app e depois todas
+// as funçõe
 
 #include "esp_err.h"
 #include "freertos/portmacro.h"
@@ -34,6 +32,9 @@ static i2c_dev_t pcf8574;
 
 uint8_t first = 0, end = 0;
 const char *old_title;
+void *displays[2];
+
+menu_config_t config;
 
 static const uint8_t char_data[] = { // Define new chars
                                      // Right Arrow
@@ -67,9 +68,9 @@ void input_encoder(void *args) {
 
   ESP_ERROR_CHECK(rotary_encoder_init(qinput));
 
-  re.pin_a = 16;
-  re.pin_b = 17;
-  re.pin_btn = 5;
+  re.pin_a = CONFIG_ENCODER_CLK;
+  re.pin_b = CONFIG_ENCODER_DT;
+  re.pin_btn = CONFIG_ENCODER_SW;
 
   ESP_ERROR_CHECK(rotary_encoder_add(&re));
   vTaskDelete(NULL);
@@ -190,6 +191,14 @@ void display(menu_path_t *current_path) {
   }
 }
 
+uint8_t option_type_menu = 0;
+void switch_menu(void *args) {
+  SET_QUICK_FUNCTION;
+  option_type_menu ^= 1;
+  config.display = displays[option_type_menu];
+  END_MENU_FUNCTION;
+}
+
 menu_node_t submenu[3] = {
     {.label = "funcA", .function = &dumb},
     {.label = "funcB", .function = &dumb},
@@ -198,28 +207,32 @@ menu_node_t submenu[3] = {
 
 menu_node_t root = {
     .label = "root",
-    .num_options = 4,
-    .submenus = (menu_node_t[4]){
+    .num_options = 5,
+    .submenus = (menu_node_t[5]){
         {.label = "submenu1", .submenus = submenu, .num_options = 3},
         {.label = "submenu2", .submenus = submenu, .num_options = 3},
         {.label = "submenu3", .submenus = submenu, .num_options = 3},
-        {.label = "blacklight", .function = &switch_blacklight}}};
+        {.label = "blacklight", .function = &switch_blacklight},
+        {.label = "Type Menu", .function = &switch_menu}}};
 
 void app_main(void) {
   qinput = xQueueCreate(5, sizeof(rotary_encoder_event_t));
 
   ESP_ERROR_CHECK(i2cdev_init());
-  ESP_ERROR_CHECK(pcf8574_init_desc(&pcf8574, 0x27, 0, 21, 22));
+  ESP_ERROR_CHECK(pcf8574_init_desc(&pcf8574, CONFIG_DISPLAY_ADDR, 0,
+                                    CONFIG_I2C_SDA, CONFIG_I2C_SCL));
+
   hd44780_switch_backlight(&lcd, blacklight);
   ESP_ERROR_CHECK(hd44780_init(&lcd));
   hd44780_upload_character(&lcd, 0, char_data);
   ESP_LOGI(TAG, "LCD ON!");
 
-  menu_config_t config = {
-      .root = root,
-      .input = &map,
-      .display = &display,
-  };
+  config.root = root;
+  config.input = &map;
+  config.display = &display;
+
+  displays[0] = &display;
+  displays[1] = &display_loop;
 
   xTaskCreatePinnedToCore(&input_encoder, "encoder", 2048, NULL, 5, NULL, 0);
   xTaskCreatePinnedToCore(&menu_init, "menu_init", 2048, &config, 1, NULL, 0);
