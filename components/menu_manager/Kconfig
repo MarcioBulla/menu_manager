@@ -1,15 +1,17 @@
 menu "Menu Menager"
 
-config HORIZONTAL_SIZE
-  int "Set Horizontal number of caracters for your display"
-  default 20
-
-config VERTICAL_SIZE
-  int "Set Vertical number of caracters for your display"
-  default 4
-
 config MAX_DEPTH_PATH
   int "Set max deth of submenus" 
   default 5
+
+
+config LOOP_INDEX
+  bool "Idendex is a LOOP"
+  default y
+
+config SALVE_INDEX
+  bool "Savel last menu index selected"
+  default y
+
 endmenu
 

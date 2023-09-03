@@ -1,6 +1,4 @@
-// TODO: Remover os CONFIG_VERTICAL_SIZE e CONFIG_HORIZONTAL_SIZE do kconfig;
-// TODO: adcionar no kconfig se quer lista de opções em loop;
-
+// TODO: Add comments
 #include "menu_manager.h"
 #include "esp_err.h"
 #include "freertos/portmacro.h"
@@ -26,15 +24,28 @@ Navigate_t input_command;
 
 void NavigationUp() {
   ESP_LOGI(TAG, "Command UP");
+#if CONFIG_LOOP_INDEX
   path.current_index++;
   path.current_index %= path.current_menu->num_options;
+#else
+  if (path.current_index < path.current_menu->num_options - 1) {
+    path.current_index++;
+  }
+#endif
 }
 
 void NavigationDown() {
+#if CONFIG_LOOP_INDEX
   ESP_LOGI(TAG, "Command DOWN");
   path.current_index =
       (path.current_menu->num_options + path.current_index - 1) %
       path.current_menu->num_options;
+#else
+  if (path.current_index > 0) {
+    path.current_index--;
+  }
+
+#endif
 }
 
 void ExecFunction() {
@@ -57,6 +68,9 @@ void NavigationBack() {
   ESP_LOGI(TAG, "Command BACK");
   depth--;
   path = steck_path[depth];
+#if !CONFIG_SALVE_INDEX
+  path.current_index = 0;
+#endif
 }
 
 void BackFunction() {
