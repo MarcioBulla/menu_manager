@@ -12,6 +12,15 @@
 #include <freertos/semphr.h>
 #include <stdint.h>
 
+#define END_MENU_FUNCTION                                                      \
+  MMfunction = NULL;                                                           \
+  vTaskDelete(MMfunction)
+
+#define SET_QUICK_FUNCTION xSemaphoreGive(MMmutex)
+
+extern TaskHandle_t MMfunction;
+extern SemaphoreHandle_t MMmutex;
+
 /**
  * Type with  possibles of action in menu system.
  *
@@ -35,7 +44,7 @@ typedef enum {
  *
  */
 typedef struct menu_node {
-  const char label[CONFIG_HORIZONTAL_SIZE];
+  const char *label;
   /**< Title of node with CONFIG_HORIZONTAL_SIZE max number characters. */
   struct menu_node *submenus;
   /**< Point of array submenus or one submenu. */

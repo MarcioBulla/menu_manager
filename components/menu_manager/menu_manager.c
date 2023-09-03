@@ -1,8 +1,5 @@
-// FIX: Execution function.
-// TODO: condition back in root
-// TODO: verify if vTaskDelete stop task
-// NOTE: Thing if quick press restart function because maybe the function use
-// this key
+// TODO: Remover os CONFIG_VERTICAL_SIZE e CONFIG_HORIZONTAL_SIZE do kconfig;
+// TODO: adcionar no kconfig se quer lista de opções em loop;
 
 #include "menu_manager.h"
 #include "esp_err.h"
@@ -19,8 +16,8 @@
 
 const static char *TAG = "menu_menager";
 
-static TaskHandle_t current_function;
-SemaphoreHandle_t mutex;
+TaskHandle_t MMfunction = NULL;
+SemaphoreHandle_t MMmutex;
 
 menu_path_t steck_path[CONFIG_MAX_DEPTH_PATH];
 menu_path_t path;
@@ -42,22 +39,18 @@ void NavigationDown() {
 
 void ExecFunction() {
   ESP_LOGI(TAG, "Execute Function");
+  xSemaphoreTake(MMmutex, portMAX_DELAY);
   xTaskCreatePinnedToCore(
       path.current_menu->submenus[path.current_index].function,
-      "Function_by_menu", 10240, NULL, 5, &current_function, 1);
+      "Function_by_menu", 10240, NULL, 5, &MMfunction, 1);
 }
 
 void SelectionOption() {
-  ESP_LOGI(TAG, "Command SELECT");
-  if (path.current_menu->submenus[path.current_index].function) {
-    ExecFunction();
-  } else {
-    ESP_LOGI(TAG, "Open Submenu");
-    path.current_menu = &path.current_menu->submenus[path.current_index];
-    path.current_index = 0;
-    depth++;
-    steck_path[depth] = path;
-  }
+  ESP_LOGI(TAG, "Open Submenu");
+  path.current_menu = &path.current_menu->submenus[path.current_index];
+  path.current_index = 0;
+  depth++;
+  steck_path[depth] = path;
 }
 
 void NavigationBack() {
@@ -67,79 +60,68 @@ void NavigationBack() {
 }
 
 void BackFunction() {
-  if (current_function != NULL) {
+  if (MMfunction != NULL) {
     ESP_LOGI(TAG, "Delete Function");
-    vTaskDelete(current_function);
+    vTaskDelete(MMfunction);
   }
-}
-
-void ResetFunction() {
-  BackFunction();
-  ExecFunction();
 }
 
 void menu_init(void *args) {
   ESP_LOGI(TAG, "Start menu");
   menu_config_t *params = (menu_config_t *)args;
 
-  mutex = xSemaphoreCreateMutex();
-  xSemaphoreGive(mutex);
+  MMmutex = xSemaphoreCreateBinary();
+  xSemaphoreGive(MMmutex);
 
   path.current_index = 0;
   path.current_menu = &params->root;
   steck_path[depth] = path;
+  params->display(&path);
 
   ESP_LOGI(TAG, "Root Title: %s", path.current_menu->label);
 
   while (true) {
-    if (xSemaphoreTake(mutex, 0) == pdTRUE) {
-      params->display(&path);
-      ESP_LOGI(TAG, "Updated display");
-      xSemaphoreGive(mutex);
-    }
     input_command = params->input();
 
-    if (xSemaphoreTake(mutex, 0) == pdTRUE) {
-      xSemaphoreGive(mutex);
+    if (xSemaphoreTake(MMmutex, 0) == pdTRUE) {
+      xSemaphoreGive(MMmutex);
 
       switch (input_command) {
 
       case NAVIGATE_UP:
         NavigationUp();
+        params->display(&path);
         break;
 
       case NAVIGATE_DOWN:
         NavigationDown();
+        params->display(&path);
         break;
 
       case NAVIGATE_SELECT:
-        SelectionOption();
+        if (path.current_menu->submenus[path.current_index].function) {
+          ExecFunction();
+        } else {
+          SelectionOption();
+          params->display(&path);
+        }
         break;
 
       case NAVIGATE_BACK:
-        NavigationBack();
+        if (depth) {
+          NavigationBack();
+          params->display(&path);
+        }
         break;
 
       default:
         ESP_LOGW(TAG, "Undenfined Input");
         break;
       }
-    } else {
-      switch (input_command) {
-
-      case NAVIGATE_SELECT:
-        ResetFunction();
-        break;
-
-      case NAVIGATE_BACK:
-        BackFunction();
-        xSemaphoreGive(mutex);
-        break;
-
-      default:
-        ESP_LOGW(TAG, "Undenfined Input");
-        break;
-      }
+    } else if (input_command == NAVIGATE_BACK) {
+      BackFunction();
+      params->display(&path);
+      xSemaphoreGive(MMmutex);
     }
   }
 }
