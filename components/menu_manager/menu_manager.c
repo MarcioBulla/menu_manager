@@ -22,30 +22,22 @@ menu_path_t path;
 uint8_t depth = 0;
 Navigate_t input_command;
 
-void NavigationUp() {
+void NavigationUp(bool loop) {
   ESP_LOGI(TAG, "Command UP");
-#if CONFIG_LOOP_INDEX
-  path.current_index++;
-  path.current_index %= path.current_menu->num_options;
-#else
-  if (path.current_index < path.current_menu->num_options - 1) {
+
+  if (path.current_index < path.current_menu->num_options - 1 || loop) {
     path.current_index++;
+    path.current_index %= path.current_menu->num_options;
   }
-#endif
 }
 
-void NavigationDown() {
-#if CONFIG_LOOP_INDEX
+void NavigationDown(bool loop) {
   ESP_LOGI(TAG, "Command DOWN");
-  path.current_index =
-      (path.current_menu->num_options + path.current_index - 1) %
-      path.current_menu->num_options;
-#else
-  if (path.current_index > 0) {
-    path.current_index--;
+  if (path.current_index > 0 || loop) {
+    path.current_index =
+        (path.current_menu->num_options + path.current_index - 1) %
+        path.current_menu->num_options;
   }
-
-#endif
 }
 
 void ExecFunction() {
@@ -103,12 +95,12 @@ void menu_init(void *args) {
       switch (input_command) {
 
       case NAVIGATE_UP:
-        NavigationUp();
+        NavigationUp(params->loop);
         params->display(&path);
         break;
 
       case NAVIGATE_DOWN:
-        NavigationDown();
+        NavigationDown(params->loop);
         params->display(&path);
         break;
 

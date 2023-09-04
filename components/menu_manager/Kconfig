@@ -4,11 +4,6 @@ config MAX_DEPTH_PATH
   int "Set max deth of submenus" 
   default 5
 
-
-config LOOP_INDEX
-  bool "Idendex is a LOOP"
-  default y
-
 config SALVE_INDEX
   bool "Savel last menu index selected"
   default y

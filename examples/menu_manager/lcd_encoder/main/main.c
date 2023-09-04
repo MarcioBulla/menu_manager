@@ -35,6 +35,7 @@ bool blacklight = true;
 uint8_t first = 0, end = 0;
 const char *old_title;
 void *displays_opt[2];
+bool displays_opt_loop[2];
 
 static const uint8_t char_data[] = { // Define new chars
                                      // Right Arrow
@@ -88,6 +89,7 @@ void app_main(void) {
   config.root = root;
   config.input = &map;
   config.display = &display;
+  config.loop = false;
 
   lcd.write_cb = write_lcd_data;
   lcd.font = HD44780_FONT_5X8;
@@ -101,7 +103,9 @@ void app_main(void) {
   lcd.pins.bl = 3;
 
   displays_opt[0] = &display;
+  displays_opt_loop[0] = false;
   displays_opt[1] = &display_loop;
+  displays_opt_loop[1] = true;
 
   ESP_ERROR_CHECK(start_lcd());
   ESP_ERROR_CHECK(start_encoder());
@@ -260,5 +264,6 @@ void switch_menu(void *args) {
   SET_QUICK_FUNCTION;
   option_type_menu ^= 1;
   config.display = displays_opt[option_type_menu];
+  config.loop = displays_opt_loop[option_type_menu];
   END_MENU_FUNCTION;
 }

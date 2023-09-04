@@ -76,6 +76,8 @@ typedef struct {
   void (*display)(menu_path_t *current_path);
   /**< Function that receive menu_path_t and index for display current
    * selection. */
+  bool loop;
+  /**< Loop menu. */
 } menu_config_t;
 
 /**
