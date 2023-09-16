@@ -65,7 +65,7 @@ Navigate_t map(void) {
   return teste;
 }
 
-esp_err_t display(menu_path_t *current_path) {
+void display(menu_path_t *current_path) {
 
   ESP_LOGI(TAG, "title: %s, index_select: %d",
            current_path->current_menu->label, current_path->current_index);
@@ -73,8 +73,6 @@ esp_err_t display(menu_path_t *current_path) {
   ESP_LOGI(
       TAG, "Option Selected %s",
       current_path->current_menu->submenus[current_path->current_index].label);
-
-  return ESP_OK;
 }
 
 void app_main(void) {

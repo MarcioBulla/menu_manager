@@ -12,14 +12,8 @@
 #include <freertos/semphr.h>
 #include <stdint.h>
 
-#define END_MENU_FUNCTION                                                      \
-  MMfunction = NULL;                                                           \
-  vTaskDelete(MMfunction)
-
-#define SET_QUICK_FUNCTION xSemaphoreGive(MMmutex)
-
-extern TaskHandle_t MMfunction;
-extern SemaphoreHandle_t MMmutex;
+#define END_MENU_FUNCTION end_menuFunction()
+#define SET_QUICK_FUNCTION setQuick_menuFunction()
 
 /**
  * Type with  possibles of action in menu system.
@@ -44,8 +38,8 @@ typedef enum {
  *
  */
 typedef struct menu_node {
-  const char *label;
-  /**< Title of node with CONFIG_HORIZONTAL_SIZE max number characters. */
+  char *label;
+  /**< Title of node. */
   struct menu_node *submenus;
   /**< Point of array submenus or one submenu. */
   size_t num_options;
@@ -87,5 +81,16 @@ typedef struct {
  * @param params The struct that there are args.
  */
 void menu_init(void *params);
+
+/**
+ * @brief Use this function all option menus when finish
+ */
+void end_menuFunction(void);
+
+/**
+ * @brief Use this function when your function is a wuick function before
+ * end_menuFunction()
+ */
+void setQuick_menuFunction(void);
 
 #endif //__MENU_MANAGER_H__
