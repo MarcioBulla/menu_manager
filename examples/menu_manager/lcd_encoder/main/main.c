@@ -1,5 +1,3 @@
-// TODO: ADD comments
-
 #include "esp_err.h"
 #include "freertos/portmacro.h"
 #include "i2cdev.h"

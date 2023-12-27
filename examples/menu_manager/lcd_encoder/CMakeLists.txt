@@ -8,5 +8,6 @@ set(EXTRA_COMPONENT_DIRS
   ~/esp/esp-idf-mylib/components
   ~/esp/esp-idf-lib/components
   )
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(main)
