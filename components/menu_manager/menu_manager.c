@@ -15,7 +15,7 @@
 const static char *TAG = "menu_menager";
 
 TaskHandle_t Menu_function = NULL;
-SemaphoreHandle_t Menu_mutex;
+SemaphoreHandle_t Menu_mutex = NULL;
 
 menu_path_t steck_path[CONFIG_MAX_DEPTH_PATH];
 menu_path_t path;

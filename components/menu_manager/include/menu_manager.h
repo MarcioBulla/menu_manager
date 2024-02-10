@@ -15,6 +15,9 @@
 #define END_MENU_FUNCTION end_menuFunction()
 #define SET_QUICK_FUNCTION setQuick_menuFunction()
 
+extern TaskHandle_t Menu_function;
+extern SemaphoreHandle_t Menu_mutex;
+
 /**
  * Type with  possibles of action in menu system.
  *
