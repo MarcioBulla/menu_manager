@@ -1,4 +1,4 @@
-version: 1.0
+version: 1.0.0
 
 description: "Easy and flexible menu manager for ESP-IDF project."
 
@@ -7,7 +7,7 @@ issues: https://github.com/MarcioBulla/menu_manager/issues
 repository: https://github.com/MarcioBulla/menu_manager
 
 maintainers:
-  - "Marcio Bulla <marciobullajr@gmail.com"
+  - "Marcio Bulla <marciobullajr@gmail.com>"
 
 dependencies:
   idf:
@@ -15,4 +15,5 @@ dependencies:
 
 files:
   excludes:
-  - ".gitignore"
+    - ".gitignore"
+
