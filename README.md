@@ -1,2 +1,2 @@
-# esp-idf-mylib
-My components of ESP-IDF
+# Menu Manager
+Easy and flaxible menu manager for ESP-IDF
