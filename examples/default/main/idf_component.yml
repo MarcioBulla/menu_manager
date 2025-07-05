@@ -1,0 +1,6 @@
+dependencies:
+  idf:
+    version: '>=4.1.0'
+  MarcioBulla/menu_manager:
+    git: https://github.com/MarcioBulla/menu_manager
+    version: main
