@@ -53,7 +53,8 @@ static void ExecFunction() {
 
   xTaskCreatePinnedToCore(
       path.current_menu->submenus[path.current_index].function,
-      "Function_by_menu", 10240, NULL, 10, &tMenuFunction, 1);
+      path.current_menu->submenus[path.current_index].label, 10240, NULL, 10,
+      &tMenuFunction, 1);
 }
 
 static void SelectionOption() {
@@ -125,20 +126,22 @@ void menu_init(void *args) {
         break;
       }
 
+      (*show)(&path);
     } else if (inputCommand == NAVIGATE_BACK) {
       vTaskDelete(tMenuFunction);
       tMenuFunction = NULL;
-      ESP_LOGI(TAG, "Exit Function");
-    }
-    if (tMenuFunction == NULL)
       (*show)(&path);
+    }
   }
 }
 
 void exitFunction(void) {
-  Navigate_t tempCommand = NAVIGATE_BACK;
-  xQueueSend(qCommands, &tempCommand, portMAX_DELAY);
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  if (tMenuFunction != NULL) {
+    ESP_LOGI(TAG, "Exit Function");
+    (*show)(&path);
+    tMenuFunction = NULL;
+    vTaskDelete(tMenuFunction);
+  }
 }
 
 void execFunction(void (*function)(void *args)) {
