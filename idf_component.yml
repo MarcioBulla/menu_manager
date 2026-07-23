@@ -2,6 +2,8 @@ version: 1.0.0
 
 description: "Easy and flexible menu manager for ESP-IDF project."
 
+license: "MIT"
+
 url: https://github.com/MarcioBulla/menu_manager
 issues: https://github.com/MarcioBulla/menu_manager/issues
 repository: https://github.com/MarcioBulla/menu_manager
@@ -14,6 +16,11 @@ dependencies:
     version: ">=4.1.0"
 
 files:
-  excludes:
+  exclude:
     - ".gitignore"
-
+    - "**/.pytest_cache"
+    - "**/.pytest_cache/**/*"
+    - "**/.venv"
+    - "**/.venv/**/*"
+    - "graphify-out"
+    - "graphify-out/**/*"

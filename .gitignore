@@ -97,5 +97,9 @@ managed_components
 
 # pytest log
 pytest_embedded_log/
+.pytest_cache/
+__pycache__/
+.venv/
+/dist/
 list_job_*.txt
 size_info.txt

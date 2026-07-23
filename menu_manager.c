@@ -51,10 +51,9 @@ static void ExecFunction() {
   ESP_LOGI(TAG, "Execute Function: %s",
            path.current_menu->submenus[path.current_index].label);
 
-  xTaskCreatePinnedToCore(
-      path.current_menu->submenus[path.current_index].function,
-      path.current_menu->submenus[path.current_index].label, 10240, NULL, 10,
-      &tMenuFunction, 1);
+  xTaskCreate(path.current_menu->submenus[path.current_index].function,
+              path.current_menu->submenus[path.current_index].label, 10240,
+              NULL, 10, &tMenuFunction);
 }
 
 static void SelectionOption() {
@@ -147,8 +146,7 @@ void exitFunction(void) {
 void execFunction(void (*function)(void *args)) {
   ESP_LOGI(TAG, "Execute Function");
 
-  xTaskCreatePinnedToCore(function, "Function_by_menu", 10240, NULL, 10,
-                          &tMenuFunction, 1);
+  xTaskCreate(function, "Function_by_menu", 10240, NULL, 10, &tMenuFunction);
   vTaskDelay(1000 / portTICK_PERIOD_MS);
 }
 

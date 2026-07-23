@@ -33,30 +33,39 @@ menu_node_t root = {
         {.label = "submenu3", .submenus = submenu, .num_options = 3},
     }};
 
+static const char *command_name(Navigate_t command) {
+  switch (command) {
+  case NAVIGATE_UP:
+    return "UP";
+  case NAVIGATE_DOWN:
+    return "DOWN";
+  case NAVIGATE_SELECT:
+    return "SELECT";
+  case NAVIGATE_BACK:
+    return "BACK";
+  default:
+    return "UNKNOWN";
+  }
+}
+
+static void send_command(Navigate_t command) {
+  ESP_LOGI(TAG, "Command received: %s", command_name(command));
+  xQueueSend(qCommands, &command, portMAX_DELAY);
+}
+
 void simula_input(void *args) {
-  Navigate_t teste = NAVIGATE_UP;
   vTaskDelay(6000 / portTICK_PERIOD_MS);
-  ESP_LOGI(TAG, "NEXT");
-  xQueueSend(qCommands, &teste, portMAX_DELAY);
+  send_command(NAVIGATE_UP);
   vTaskDelay(5000 / portTICK_PERIOD_MS);
-  teste = NAVIGATE_SELECT;
-  ESP_LOGI(TAG, "SELECT");
-  xQueueSend(qCommands, &teste, portMAX_DELAY);
+  send_command(NAVIGATE_SELECT);
   vTaskDelay(5000 / portTICK_PERIOD_MS);
-  teste = NAVIGATE_DOWN;
-  ESP_LOGI(TAG, "DOWN");
-  xQueueSend(qCommands, &teste, portMAX_DELAY);
+  send_command(NAVIGATE_DOWN);
   vTaskDelay(5000 / portTICK_PERIOD_MS);
-  teste = NAVIGATE_SELECT;
-  ESP_LOGI(TAG, "SELECT");
-  xQueueSend(qCommands, &teste, portMAX_DELAY);
+  send_command(NAVIGATE_SELECT);
   vTaskDelay(5000 / portTICK_PERIOD_MS);
-  teste = NAVIGATE_BACK;
-  ESP_LOGI(TAG, "BACK");
-  xQueueSend(qCommands, &teste, portMAX_DELAY);
+  send_command(NAVIGATE_BACK);
   vTaskDelay(5000 / portTICK_PERIOD_MS);
-  ESP_LOGI(TAG, "BACK");
-  xQueueSend(qCommands, &teste, portMAX_DELAY);
+  send_command(NAVIGATE_BACK);
   vTaskDelay(10000 / portTICK_PERIOD_MS);
 
   ESP_LOGI(TAG, "Finalizada");
@@ -64,25 +73,31 @@ void simula_input(void *args) {
 }
 
 void display(menu_path_t *current_path) {
+  menu_node_t *menu = current_path->current_menu;
 
-  ESP_LOGI(TAG, "title: %s, index_select: %d",
-           current_path->current_menu->label, current_path->current_index);
-
-  ESP_LOGI(
-      TAG, "Option Selected %s",
-      current_path->current_menu->submenus[current_path->current_index].label);
+  printf("\n========== MENU ==========\n");
+  printf("Menu: %s\n", menu->label);
+  printf("--------------------------\n");
+  for (size_t position = menu->num_options; position > 0; position--) {
+    size_t index = position - 1;
+    printf("%c %s\n", index == current_path->current_index ? '>' : ' ',
+           menu->submenus[index].label);
+  }
+  printf("==========================\n\n");
+  fflush(stdout);
 }
 
 void app_main(void) {
 
-  menu_config_t config = {
+  static menu_config_t config;
+  config = (menu_config_t){
       .root = root,
       .loop = true,
       .display = &display,
   };
 
-  xTaskCreatePinnedToCore(&menu_init, "menu_init", 2048, &config, 3, NULL, 0);
-  vTaskDelay(5000 / portMAX_DELAY);
-  xTaskCreatePinnedToCore(&simula_input, "simula", 2048, NULL, 1, NULL, 0);
+  xTaskCreate(menu_init, "menu_init", 2048, &config, 3, NULL);
+  vTaskDelay(5000 / portTICK_PERIOD_MS);
+  xTaskCreate(simula_input, "simula", 2048, NULL, 1, NULL);
   vTaskDelete(NULL);
 }

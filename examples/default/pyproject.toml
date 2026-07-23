@@ -1,0 +1,17 @@
+[project]
+name = "menu-manager-default-tests"
+version = "0.1.0"
+description = "Hardware integration tests for the Menu Manager default example"
+requires-python = ">=3.10"
+dependencies = [
+    "pytest>=9,<10",
+    "pytest-embedded-idf[serial]~=2.8.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-s"
+python_files = ["pytest_*.py"]
+testpaths = ["."]
+
+[tool.uv]
+package = false
