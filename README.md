@@ -33,10 +33,10 @@ The bundled example and hardware test are verified with ESP-IDF 6.0.1.
 
 ### ESP Component Registry
 
-Add version 1.0.0 to an ESP-IDF project from the project root:
+Add version 1.0.1 to an ESP-IDF project from the project root:
 
 ```bash
-idf.py add-dependency "marciobulla/menu_manager^1.0.0"
+idf.py add-dependency "marciobulla/menu_manager^1.0.1"
 ```
 
 This adds the dependency to the project's component manifest, normally
@@ -44,7 +44,7 @@ This adds the dependency to the project's component manifest, normally
 
 ```yaml
 dependencies:
-  marciobulla/menu_manager: "^1.0.0"
+  marciobulla/menu_manager: "^1.0.1"
 ```
 
 Run `idf.py reconfigure` or any normal build command to resolve and download
