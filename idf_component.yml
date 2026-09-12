@@ -2,7 +2,7 @@ version: 1.0.0
 
 description: "Easy and flexible menu manager for ESP-IDF project."
 
-license: "MIT"
+license: "Apache-2.0"
 
 url: https://github.com/MarcioBulla/menu_manager
 issues: https://github.com/MarcioBulla/menu_manager/issues

@@ -475,4 +475,6 @@ Issues and feature requests can be reported in the
 
 ## License
 
-Menu Manager is released under the [MIT License](LICENSE).
+Copyright (c) 2026 Marcio Bulla.
+
+Menu Manager is released under the [Apache License 2.0 (Apache-2.0)](LICENSE).
